@@ -43,7 +43,7 @@ class ImagePreprocessingWrapper(gym.ObservationWrapper):
 
 # === Create env ===
 gym.register_envs(ale_py)
-env = gym.make("ALE/VideoPinball-v5", render_mode="rgb_array") # can see by human
+env = gym.make("ALE/VideoPinball-v5", render_mode="human") # can see by human
 env = ImagePreprocessingWrapper(env, shape=(84, 84), grayscale=True, num_stack=4)
 
 obs, info = env.reset()

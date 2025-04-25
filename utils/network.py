@@ -1,17 +1,16 @@
-"""
-Refactored original MuZero Conv‑LSTM model:
-- ✅ 修复了所有 LSTM 不能塞入 Sequential 的错误（改为手动 forward）
-- ✅ 所有输出 shape 从 21x21 改回 6x6，与原论文一致，便于与调试网络统一
-- ✅ 简化过度冗余的 Sequential 拼装方式，结构更清晰
-- ✅ 每个 forward 中添加打印，观察 tensor shape 和前几个元素，方便 debug
-
-可直接运行 `python model.py` 查看效果
-"""
-
 import torch
 import torch.nn as nn
 
 class ResidualBlock(nn.Module):
+    """
+    Refactored original MuZero Conv‑LSTM model:
+
+    [Representation] torch.Size([1, 16, 21, 21])
+    [Dynamics] next_state: torch.Size([1, 16, 21, 21]) reward: tensor([0.0721], grad_fn=<ViewBackward0>)
+    [Prediction] policy: torch.Size([1, 9]) value: torch.Size([1, 21])
+
+    可直接运行查看效果(can be run directly to see the effect):
+    """
     def __init__(self, channels):
         super().__init__()
         self.seq = nn.Sequential(
