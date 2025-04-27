@@ -49,7 +49,7 @@ class Representation(nn.Module):
 
     def forward(self, x):
         x = self.model(x)
-        print("[Representation]", x.shape)
+        # print("[Representation]", x.shape)
         return x
 
 class Dynamics(nn.Module):
@@ -74,7 +74,7 @@ class Dynamics(nn.Module):
         x = self.resblock(self.conv(x))
         next_s = self.fc(x).view_as(s)
         reward = self.reward_head(x).view(-1, 1, 1, 1)
-        print("[Dynamics] next_state:", next_s.shape, "reward:", reward.view(-1))
+        # print("[Dynamics] next_state:", next_s.shape, "reward:", reward.view(-1))
         return reward, next_s
 
 class Prediction(nn.Module):
@@ -93,7 +93,7 @@ class Prediction(nn.Module):
     def forward(self, s):
         x = self.flat(s)
         p, v = self.policy(x), self.value(x)
-        print("[Prediction] policy:", p.shape, "value:", v.shape)
+        # print("[Prediction] policy:", p.shape, "value:", v.shape)
         return p, v
 
 # Test forward

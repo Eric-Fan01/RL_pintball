@@ -57,7 +57,8 @@ def run_training(network, buffer, batch_size=32, rollout_steps=5, device="cuda",
         # === Step 2: Dynamics and Prediction
         for t in range(rollout_steps):
             policy_logits, value = network.prediction(state)
-            predicted_policies.append(policy_logits)
+            # predicted_policies.append(policy_logits)
+            predicted_policies.append(policy_logits.squeeze(0))
             predicted_values.append(value.squeeze())
 
             if t < rollout_steps - 1:
@@ -67,56 +68,35 @@ def run_training(network, buffer, batch_size=32, rollout_steps=5, device="cuda",
                 predicted_rewards.append(reward.squeeze())
                 state = next_state.detach()  # important to detach
 
-        # # === Step 3: Loss calculation
-        # loss_fn = nn.MSELoss()
-
-        # rewards_target = rewards[:-1]  # rewards[0] ~ rewards[T-2]
-        # rewards_pred = torch.stack(predicted_rewards)
-
-        # values_target = rewards.sum().expand_as(predicted_values[0])  # 简化版，用总reward近似value
-        # values_pred = torch.stack(predicted_values)
-
-        # policy_target = actions[1:]  # 下一个动作
-        # policy_pred = torch.stack(predicted_policies[:-1])
-
-        # # reward loss
-        # reward_loss = loss_fn(rewards_pred, rewards_target)
-
-        # # value loss
-        # value_loss = loss_fn(values_pred, values_target)
-
-        # # policy loss (cross entropy)
-        # policy_loss_fn = nn.CrossEntropyLoss()
-        # policy_loss = policy_loss_fn(policy_pred, policy_target)
-
-        # loss = reward_loss + value_loss + policy_loss
-
-
 
 
         loss_fn = nn.MSELoss()
 
-        rewards_target = rewards[1:]  # ✅ 正确，rewards[1:]
+        # 注意 rollout_steps = 5
+        # 产生 rollout_steps-1个 rewards_pred，policy_pred
+
+        rewards_target = rewards[1:]  # rewards[1]到rewards[rollout_steps-1]
         rewards_pred = torch.stack(predicted_rewards)
 
-        values_target = rewards.sum().expand_as(predicted_values[0])
-        values_pred = torch.stack(predicted_values)
+        policy_target = actions[1:]
+        policy_pred = torch.stack(predicted_policies[:-1])
 
-        policy_target = actions[1:]  # ✅ 保持不变
-        policy_pred = torch.stack(predicted_policies)  # ✅ 全部 predicted_policies，不要切[:-1]
+        # 初始 value
+        value_target = rewards.sum().unsqueeze(0)  # 单步
+        values_pred = torch.stack(predicted_values)
+        value_pred = values_pred[0].unsqueeze(0)   # 只拿第一个 initial prediction
 
         # reward loss
         reward_loss = loss_fn(rewards_pred, rewards_target)
 
         # value loss
-        value_loss = loss_fn(values_pred, values_target)
+        value_loss = loss_fn(value_pred, value_target)
 
         # policy loss
         policy_loss_fn = nn.CrossEntropyLoss()
         policy_loss = policy_loss_fn(policy_pred, policy_target)
 
         loss = reward_loss + value_loss + policy_loss
-
 
 
         # === Step 4: Optimize
