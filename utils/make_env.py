@@ -42,17 +42,36 @@ class ImagePreprocessingWrapper(gym.ObservationWrapper):
         return self.observation(obs), info
 
 
-def make_env(render=False, shape=(84, 84), grayscale=True, num_stack=4):
+# def make_env(render=False, shape=(84, 84), grayscale=True, num_stack=4):
+#     gym.register_envs(ale_py)
+#     render_mode = "human" if render else "rgb_array"
+#     env = gym.make("ALE/VideoPinball-v5", render_mode=render_mode)
+#     env = ImagePreprocessingWrapper(env, shape=shape, grayscale=grayscale, num_stack=num_stack)
+#     return env
+
+def make_env(game="VideoPinball", render=False, shape=(84, 84), grayscale=True, num_stack=4):
+    """
+    Create a Gymnasium environment with preprocessing.
+    
+    Args:
+        game: str, one of ["VideoPinball", "Breakout", etc.]
+        render: bool, whether to use human rendering
+        shape: tuple, resize observation to (H,W)
+        grayscale: bool, whether to convert to grayscale
+        num_stack: int, number of frames to stack
+    """
     gym.register_envs(ale_py)
     render_mode = "human" if render else "rgb_array"
-    env = gym.make("ALE/VideoPinball-v5", render_mode=render_mode)
+    env_name = f"ALE/{game}-v5"
+    env = gym.make(env_name, render_mode=render_mode)
     env = ImagePreprocessingWrapper(env, shape=shape, grayscale=grayscale, num_stack=num_stack)
     return env
 
 
+
 # Example of self-play interaction for MuZero
 if __name__ == '__main__':
-    env = make_env(render=False)
+    env = make_env(game='Breakout', render=True)
     replay_buffer = []
 
     obs, info = env.reset()

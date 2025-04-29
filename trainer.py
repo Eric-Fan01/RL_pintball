@@ -21,7 +21,7 @@ def run_training(network, buffer, batch_size=32, rollout_steps=5, device="cuda",
 
     if len(buffer) < batch_size:
         print("[Trainer] Buffer too small, skip training.")
-        return
+        return -1.0
 
     batch = buffer.sample(batch_size)
 
@@ -34,11 +34,11 @@ def run_training(network, buffer, batch_size=32, rollout_steps=5, device="cuda",
         if len(traj) < rollout_steps:
             continue
 
-        # === 从轨迹中随机抽一个起点
+        
         start_idx = np.random.randint(0, len(traj) - rollout_steps + 1)
         rollout = traj[start_idx:start_idx + rollout_steps]
 
-        # === 解析 rollout
+        
         obs_seq = [step[0] for step in rollout]   # (C,H,W)
         actions = [step[1] for step in rollout]
         rewards = [step[2] for step in rollout]
@@ -47,14 +47,14 @@ def run_training(network, buffer, batch_size=32, rollout_steps=5, device="cuda",
         actions = torch.tensor(actions, dtype=torch.int64, device=device)
         rewards = torch.tensor(rewards, dtype=torch.float32, device=device)
 
-        # === Step 1: Representation
+        # === Representation
         state = network.representation(obs_seq[0].unsqueeze(0))  # obs[0]
 
         predicted_rewards = []
         predicted_values = []
         predicted_policies = []
 
-        # === Step 2: Dynamics and Prediction
+        # === Dynamics and Prediction
         for t in range(rollout_steps):
             policy_logits, value = network.prediction(state)
             # predicted_policies.append(policy_logits)
@@ -82,9 +82,9 @@ def run_training(network, buffer, batch_size=32, rollout_steps=5, device="cuda",
         policy_pred = torch.stack(predicted_policies[:-1])
 
         # 初始 value
-        value_target = rewards.sum().unsqueeze(0)  # 单步
+        value_target = rewards.sum().unsqueeze(0)  
         values_pred = torch.stack(predicted_values)
-        value_pred = values_pred[0].unsqueeze(0)   # 只拿第一个 initial prediction
+        value_pred = values_pred[0].unsqueeze(0)   
 
         # reward loss
         reward_loss = loss_fn(rewards_pred, rewards_target)
@@ -108,3 +108,4 @@ def run_training(network, buffer, batch_size=32, rollout_steps=5, device="cuda",
 
     avg_loss = total_loss / batch_size
     print(f"[Trainer] Training done, avg total loss: {avg_loss:.6f}")
+    return avg_loss
