@@ -16,7 +16,7 @@ from utils.mcts import mcts_search
 # 超参
 # ========================
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-action_space_size = 4   # VideoPinball动作数量（Breakout改成4）
+action_space_size = 9   # VideoPinball动作数量（Breakout改成4）
 support_size = 21
 
 num_epochs = 1000
@@ -34,7 +34,7 @@ latest_checkpoint = "./checkpoints/muzero_checkpoint_latest.pth"
 # ========================
 # 初始化
 # ========================
-env = make_env(game='Breakout',render=False)
+env = make_env(game='VideoPinball',render=False)
 network = MuZeroNet(action_space_size=action_space_size, support_size=support_size).to(device)
 buffer = ReplayBuffer(capacity=buffer_capacity)
 
